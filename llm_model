@@ -1,0 +1,32 @@
+from transformers import AutoTokenizer, AutoModelForCausalLM
+import torch
+
+# Path to the downloaded model directory
+model_path = "/path/to/your/downloaded/model"  # Replace with the actual path
+
+# Load the tokenizer and model
+tokenizer = AutoTokenizer.from_pretrained(model_path)
+model = AutoModelForCausalLM.from_pretrained(model_path, torch_dtype=torch.float16, device_map="auto")
+
+# Define the prompt
+prompt = (
+    "Write a paragraph with three sentences. Each sentence must include one of these words: "
+    "valley, mitochondria, atom. Use simple language suitable for elementary school students."
+)
+
+# Tokenize the input
+inputs = tokenizer(prompt, return_tensors="pt")
+
+# Generate text
+outputs = model.generate(
+    inputs.input_ids.to(model.device),
+    max_length=100,  # Adjust based on desired length
+    temperature=0.7,  # Controls randomness (0.7 is a balanced value)
+    top_p=0.9,  # Nucleus sampling for better quality
+    repetition_penalty=1.2,  # Penalize repeated phrases
+    pad_token_id=tokenizer.eos_token_id  # Avoid padding issues
+)
+
+# Decode and print the output
+generated_paragraph = tokenizer.decode(outputs[0], skip_special_tokens=True)
+print("Generated Paragraph:\n", generated_paragraph)
